@@ -94,8 +94,8 @@
       <input id="search" type="search" placeholder="🔍 Пошук відповіді" style="flex:1;min-width:200px">
       <button id="new-answer" class="btn primary">➕ Нова відповідь</button>
     </div>
-    <p class="hint">Бот перевіряє відповіді зверху вниз: при збігу ключових слів спрацьовує перша. Нові відповіді додаються нагору.
-      Зміни потрапляють у бота приблизно за 30 секунд.</p>
+    <p class="hint">ШІ сам за змістом визначає, яка готова відповідь підходить до питання клієнтки (навіть з помилками чи російською),
+      тож головне — зрозуміла назва-питання. Зміни потрапляють у бота приблизно за 30 секунд.</p>
     <div id="answers-list"></div>
   </section>
 
@@ -129,7 +129,7 @@
 <dialog id="editor">
   <div class="dlg">
     <h2 id="ed-heading">Відповідь</h2>
-    <label for="ed-title">Питання <small>як зазвичай питають клієнтки</small></label>
+    <label for="ed-title">Питання <small>як зазвичай питають клієнтки: за ним ШІ впізнає схожі питання</small></label>
     <input id="ed-title" type="text" maxlength="120">
     <label for="ed-text">Текст відповіді</label>
     <textarea id="ed-text"></textarea>
@@ -142,7 +142,7 @@
         <button id="ed-media-remove" class="btn danger" type="button">Прибрати</button>
       </div>
     </div>
-    <label for="ed-keywords">Ключові слова <small>через кому, основою слова: «бантик» знайде і «бантики»</small></label>
+    <label for="ed-keywords">Ключові слова <small>необов'язково: ШІ сам розпізнає питання за змістом, слова діють, коли ШІ недоступний</small></label>
     <input id="ed-keywords" type="text" placeholder="бантик, зав'язати, схема">
     <p id="ed-patterns" class="hint" style="margin-top:6px"></p>
     <label for="ed-button">Кнопка внизу чату <small>необов'язково, можна з емодзі</small></label>
