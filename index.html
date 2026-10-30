@@ -55,6 +55,10 @@
   .stat .n { font-size: 30px; font-weight: 700; color: var(--accent); }
   .stat .l { color: var(--muted); font-size: 14px; }
   .login { max-width: 460px; margin: 48px auto; }
+  .day { display: flex; gap: 10px; align-items: center; padding: 6px 0; flex-wrap: wrap; }
+  .day .dn { width: 110px; display: flex; gap: 8px; align-items: center; font-weight: 400; margin: 0; }
+  .day input[type=time] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+  .day .off { color: var(--muted); }
   .empty { text-align: center; color: var(--muted); padding: 32px 0; }
   .hidden { display: none !important; }
   @media (max-width: 600px) {
@@ -76,6 +80,7 @@
     <button data-tab="answers" class="active">📚 Готові відповіді</button>
     <button data-tab="knowledge">📝 Умови магазину</button>
     <button data-tab="unanswered">❓ Без відповіді</button>
+    <button data-tab="hours">🕘 Неробочий час</button>
     <button data-tab="stats">📊 Статистика</button>
   </nav>
 </header>
@@ -119,6 +124,23 @@
         Список оновлюється раз на 5 хвилин.</p>
     </div>
     <div id="unanswered-list"></div>
+  </section>
+
+  <section id="tab-hours" class="hidden">
+    <div class="card">
+      <h2>Неробочий час</h2>
+      <p class="hint">Бот відповідає цілодобово. Але коли він передає питання вам поза вашим графіком, він одразу
+        попереджає клієнтку, коли ви відповісте (не частіше, ніж раз на 3 години).</p>
+      <label style="font-weight:400;display:flex;gap:8px;align-items:center">
+        <input id="oh-enabled" type="checkbox"> Попереджати клієнток у неробочий час
+      </label>
+      <label>Коли ви на зв'язку</label>
+      <div id="oh-days"></div>
+      <label for="oh-message">Повідомлення клієнтці <small>замість {коли} бот підставить «завтра о 9:00», «у понеділок о 9:00» тощо</small></label>
+      <textarea id="oh-message" style="min-height:90px" maxlength="500"></textarea>
+      <p class="hint" id="oh-preview" style="margin-top:8px"></p>
+      <div class="row"><button id="oh-save" class="btn primary" type="button">💾 Зберегти</button></div>
+    </div>
   </section>
 
   <section id="tab-stats" class="hidden">
@@ -173,7 +195,11 @@ const MAX_MEDIA = 45 * 1024 * 1024;
 const $ = (s) => document.querySelector(s);
 let token = "";
 try { token = localStorage.getItem(TOKEN_KEY) || ""; } catch (e) {}
-const state = { answers: [], answersSha: null, kHead: "", sections: [], kSha: null, kDirty: false, unanswered: [], stats: null };
+const state = { answers: [], answersSha: null, kHead: "", sections: [], kSha: null, kDirty: false, unanswered: [], stats: null,
+                settings: null, settingsSha: null, ohDirty: false };
+// так само, як у боті (storage.DEFAULT_SETTINGS), якщо бот ще не створив settings.json
+const DEFAULT_OFFHOURS = { enabled: true, days: [...Array(5).fill(["09:00", "16:00"]), null, null],
+  message: "🌙 Зараз неробочий час, тож менеджер відповість {коли}. Дякуємо за терпіння!" };
 const mediaUrls = {};
 
 // ---------- GitHub API ----------
@@ -279,16 +305,23 @@ function switchTab(name) {
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
   document.querySelectorAll("main > section[id^=tab-]").forEach((s) => s.classList.toggle("hidden", s.id !== "tab-" + name));
 }
-document.querySelectorAll("nav button").forEach((b) => (b.onclick = () => { switchTab(b.dataset.tab); if (b.dataset.tab !== "knowledge") loadAll().catch(handleError); }));
+document.querySelectorAll("nav button").forEach((b) => (b.onclick = () => { switchTab(b.dataset.tab); if (b.dataset.tab !== "knowledge" && b.dataset.tab !== "hours") loadAll().catch(handleError); }));
 
 // ---------- Завантаження даних ----------
 async function loadAll() {
-  const [a, k, u, s] = await Promise.all([getText("answers.json"), getText("knowledge.md"), getText("unanswered.json"), getText("stats.json")]);
+  const [a, k, u, s, st] = await Promise.all([getText("answers.json"), getText("knowledge.md"), getText("unanswered.json"),
+    getText("stats.json"), getText("settings.json")]);
   if (a.text === null) throw new Error("у репозиторії ще немає даних бота. Запустіть бота з налаштованим GitHub");
   state.answers = JSON.parse(a.text); state.answersSha = a.sha;
   if (!state.kDirty) { parseKnowledge(k.text || ""); state.kSha = k.sha; renderKnowledge(); }  // не затираємо незбережене
   state.unanswered = u.text ? JSON.parse(u.text) : [];
   state.stats = s.text ? JSON.parse(s.text) : null;
+  if (!state.ohDirty) {
+    state.settings = st.text ? JSON.parse(st.text) : {};
+    state.settings.offhours = { ...structuredClone(DEFAULT_OFFHOURS), ...(state.settings.offhours || {}) };
+    state.settingsSha = st.sha;
+    renderHours();
+  }
   renderAnswers(); renderUnanswered(); renderStats();
 }
 
@@ -484,6 +517,67 @@ function renderUnanswered() {
   }
 }
 
+// ---------- Неробочий час (settings.json) ----------
+const DAY_NAMES = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"];
+const DAY_ON = ["у понеділок", "у вівторок", "у середу", "у четвер", "у п'ятницю", "у суботу", "у неділю"];
+const pretty = (t) => t.replace(/^0(\d)/, "$1");
+
+function renderHours() {
+  const oh = state.settings.offhours;
+  $("#oh-enabled").checked = !!oh.enabled;
+  $("#oh-message").value = oh.message || "";
+  const box = $("#oh-days");
+  box.replaceChildren();
+  oh.days.forEach((d, i) => {
+    const on = el("input", { type: "checkbox" });
+    on.checked = !!d;
+    const from = el("input", { type: "time", value: d ? d[0] : "09:00" });
+    const to = el("input", { type: "time", value: d ? d[1] : "18:00" });
+    const times = el("span", { class: "row" }, from, "—", to);
+    const off = el("span", { class: "off" }, "вихідний");
+    const sync = () => {
+      times.classList.toggle("hidden", !on.checked); off.classList.toggle("hidden", on.checked);
+      oh.days[i] = on.checked ? [from.value || "09:00", to.value || "18:00"] : null;
+      state.ohDirty = true; renderPreview();
+    };
+    on.onchange = from.onchange = to.onchange = sync;
+    times.classList.toggle("hidden", !d); off.classList.toggle("hidden", !!d);
+    box.append(el("div", { class: "day" }, el("label", { class: "dn" }, on, DAY_NAMES[i]), times, off));
+  });
+  renderPreview();
+}
+
+function nextOpen(days) {
+  const now = new Date();
+  for (let off = 0; off < 8; off++) {
+    const d = new Date(now.getTime() + off * 864e5);
+    const day = days[(d.getDay() + 6) % 7];
+    if (!day) continue;
+    if (off === 0 && now.getHours() * 60 + now.getMinutes() >= +day[0].slice(0, 2) * 60 + +day[0].slice(3)) continue;
+    return `${off === 0 ? "сьогодні" : off === 1 ? "завтра" : DAY_ON[(d.getDay() + 6) % 7]} о ${pretty(day[0])}`;
+  }
+  return "найближчим часом";
+}
+
+function renderPreview() {
+  const oh = state.settings.offhours;
+  $("#oh-preview").textContent = "Зараз клієнтка побачила б: «" + (oh.message || "").replaceAll("{коли}", nextOpen(oh.days)) + "»";
+}
+
+$("#oh-enabled").onchange = () => { state.settings.offhours.enabled = $("#oh-enabled").checked; state.ohDirty = true; };
+$("#oh-message").oninput = () => { state.settings.offhours.message = $("#oh-message").value; state.ohDirty = true; renderPreview(); };
+
+$("#oh-save").onclick = async () => {
+  const oh = state.settings.offhours;
+  if (oh.days.some((d) => d && d[0] >= d[1])) return toast("Час початку має бути раніше за кінець", true);
+  if (!oh.message.trim()) return toast("Напишіть повідомлення для клієнток", true);
+  try {
+    state.settingsSha = await putFile("settings.json", b64encodeText(JSON.stringify(state.settings, null, 1)), state.settingsSha, "Сайт: неробочий час");
+    state.ohDirty = false;
+    toast("✅ Збережено. Бот оновиться приблизно за 30 секунд.");
+  } catch (e) { if (e.message === "conflict") state.ohDirty = false; handleError(e); }
+};
+
 // ---------- Статистика ----------
 function sumDays(days) {
   const total = {};
@@ -519,6 +613,11 @@ function renderStats() {
     el("div", { class: "card", style: "margin-top:12px" }, el("h2", {}, "🔝 Найпопулярніші готові відповіді"),
       top.length ? el("ol", {}, top.map(([id, n]) => el("li", {}, `${titles[id] || "видалена відповідь"} — ${n}`)))
                  : el("p", { class: "hint" }, "Поки немає")));
+  const waits = state.stats.waits || [];
+  box.append(el("div", { class: "card" }, el("h2", {}, "🔔 Що клієнтки чекають"),
+    el("p", { class: "hint" }, "Товари, яких не було в наявності: бот напише клієнтці, щойно вони з'являться на сайті. Підказка, що варто дозамовити."),
+    waits.length ? el("ul", {}, [...waits].reverse().map((w) => el("li", {}, `${w.wish} (${w.date.slice(8, 10)}.${w.date.slice(5, 7)})`)))
+                 : el("p", { class: "hint" }, "Поки ніхто не чекає")));
 }
 
 // ---------- Старт ----------
