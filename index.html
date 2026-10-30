@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Адмінка бота OKSANA L🎀NTA</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎀</text></svg>">
+<style>
+  :root {
+    --bg: #fbf7f8; --card: #fff; --text: #2b2228; --muted: #7d6f77; --line: #eadfe4;
+    --accent: #c2185b; --accent-soft: #fde7ef; --ok: #2e7d32; --danger: #c62828; --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  .bar { max-width: 960px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand { font-weight: 700; font-size: 18px; margin-right: auto; }
+  nav { max-width: 960px; margin: 0 auto; padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; }
+  nav button { border: 0; background: none; padding: 10px 14px; font: inherit; color: var(--muted); border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+  nav button.active { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  main { max-width: 960px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  h2 { font-size: 20px; margin: 4px 0 12px; }
+  .hint { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  .btn { border: 1px solid var(--line); background: var(--card); color: var(--text); padding: 9px 16px; border-radius: 10px; font: inherit; cursor: pointer; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.danger { color: var(--danger); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  label { display: block; font-weight: 600; margin: 14px 0 6px; }
+  label small { font-weight: 400; color: var(--muted); }
+  input[type=text], input[type=password], input[type=search], textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: #fff; color: var(--text);
+  }
+  textarea { min-height: 140px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .item { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); margin-bottom: 8px; cursor: pointer; }
+  .item:hover { border-color: var(--accent); }
+  .item .t { flex: 1; min-width: 0; }
+  .item .t b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .t span { color: var(--muted); font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badges { display: flex; gap: 4px; flex-wrap: wrap; }
+  .badge { font-size: 12px; background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+  dialog { border: 0; border-radius: var(--radius); padding: 0; width: min(720px, 100vw - 24px); max-height: calc(100vh - 24px); }
+  dialog::backdrop { background: rgba(43, 34, 40, .45); }
+  .dlg { padding: 20px; overflow-y: auto; max-height: calc(100vh - 24px); }
+  .dlg-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; margin-top: 20px; position: sticky; bottom: -20px; background: #fff; padding: 12px 0; }
+  .media-box { border: 1px dashed var(--line); border-radius: 12px; padding: 12px; }
+  .media-box video, .media-box img { max-width: 100%; max-height: 280px; border-radius: 8px; display: block; margin-bottom: 8px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 18px; border-radius: 10px; z-index: 50; max-width: calc(100vw - 32px); }
+  .toast.err { background: var(--danger); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .stat .n { font-size: 30px; font-weight: 700; color: var(--accent); }
+  .stat .l { color: var(--muted); font-size: 14px; }
+  .login { max-width: 460px; margin: 48px auto; }
+  .empty { text-align: center; color: var(--muted); padding: 32px 0; }
+  .hidden { display: none !important; }
+  @media (max-width: 600px) {
+    .dlg-actions { position: static; }
+    .dlg-actions .btn { flex: 1; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stat .n { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">🎀 Адмінка бота</div>
+    <span id="who" class="hint" style="margin:0"></span>
+    <button id="logout" class="btn hidden">Вийти</button>
+  </div>
+  <nav id="tabs" class="hidden">
+    <button data-tab="answers" class="active">📚 Готові відповіді</button>
+    <button data-tab="knowledge">📝 Умови магазину</button>
+    <button data-tab="unanswered">❓ Без відповіді</button>
+    <button data-tab="stats">📊 Статистика</button>
+  </nav>
+</header>
+
+<main>
+  <section id="login" class="card login hidden">
+    <h2>Вхід</h2>
+    <p class="hint">Вставте токен доступу. Його потрібно ввести лише один раз на цьому комп'ютері.</p>
+    <label for="token">Токен</label>
+    <input id="token" type="password" autocomplete="off" placeholder="github_pat_...">
+    <div class="row" style="margin-top:16px"><button id="login-btn" class="btn primary">Увійти</button></div>
+  </section>
+
+  <section id="tab-answers" class="hidden">
+    <div class="row" style="margin-bottom:12px">
+      <input id="search" type="search" placeholder="🔍 Пошук відповіді" style="flex:1;min-width:200px">
+      <button id="new-answer" class="btn primary">➕ Нова відповідь</button>
+    </div>
+    <p class="hint">Бот перевіряє відповіді зверху вниз: при збігу ключових слів спрацьовує перша. Нові відповіді додаються нагору.
+      Зміни потрапляють у бота приблизно за 30 секунд.</p>
+    <div id="answers-list"></div>
+  </section>
+
+  <section id="tab-knowledge" class="hidden">
+    <div class="card">
+      <h2>Умови магазину</h2>
+      <p class="hint">Звідси ШІ бере факти: оплата, доставка, знижки, повернення. Пишіть просто, як пояснили б людині.
+        Ціни й залишки товарів сюди писати не треба: бот бере їх із сайту.</p>
+    </div>
+    <div id="sections"></div>
+    <div class="row">
+      <button id="add-section" class="btn">➕ Новий розділ</button>
+      <button id="save-knowledge" class="btn primary">💾 Зберегти умови</button>
+    </div>
+  </section>
+
+  <section id="tab-unanswered" class="hidden">
+    <div class="card">
+      <h2>Питання, які бот передав вам</h2>
+      <p class="hint">Якщо питання повторюється, зробіть з нього готову відповідь, і наступного разу бот відповість сам.
+        Список оновлюється раз на 5 хвилин.</p>
+    </div>
+    <div id="unanswered-list"></div>
+  </section>
+
+  <section id="tab-stats" class="hidden">
+    <div id="stats"></div>
+  </section>
+</main>
+
+<dialog id="editor">
+  <div class="dlg">
+    <h2 id="ed-heading">Відповідь</h2>
+    <label for="ed-title">Питання <small>як зазвичай питають клієнтки</small></label>
+    <input id="ed-title" type="text" maxlength="120">
+    <label for="ed-text">Текст відповіді</label>
+    <textarea id="ed-text"></textarea>
+    <label>Відео або фото <small>до 45 МБ, клієнтка отримає його разом з текстом</small></label>
+    <div class="media-box">
+      <div id="ed-media-preview" class="hint" style="margin:0 0 8px">Немає</div>
+      <div class="row">
+        <label class="btn" style="margin:0;font-weight:400">📎 Вибрати файл
+          <input id="ed-file" type="file" accept="video/*,image/*" class="hidden"></label>
+        <button id="ed-media-remove" class="btn danger" type="button">Прибрати</button>
+      </div>
+    </div>
+    <label for="ed-keywords">Ключові слова <small>через кому, основою слова: «бантик» знайде і «бантики»</small></label>
+    <input id="ed-keywords" type="text" placeholder="бантик, зав'язати, схема">
+    <p id="ed-patterns" class="hint" style="margin-top:6px"></p>
+    <label for="ed-button">Кнопка внизу чату <small>необов'язково, можна з емодзі</small></label>
+    <input id="ed-button" type="text" maxlength="40" placeholder="🎀 Як зробити бантик">
+    <label style="font-weight:400;display:flex;gap:8px;align-items:center">
+      <input id="ed-handoff" type="checkbox"> Після відповіді також передавати питання мені
+    </label>
+    <div class="dlg-actions">
+      <div class="row">
+        <button id="ed-up" class="btn" type="button" title="Вище в списку">⬆️</button>
+        <button id="ed-down" class="btn" type="button" title="Нижче в списку">⬇️</button>
+        <button id="ed-delete" class="btn danger" type="button">🗑 Видалити</button>
+      </div>
+      <div class="row">
+        <button id="ed-cancel" class="btn" type="button">Скасувати</button>
+        <button id="ed-save" class="btn primary" type="button">💾 Зберегти</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+// Репозиторій з даними бота (приватний). Сайт лише читає й змінює файли в ньому через GitHub API.
+const REPO = "Uyli228/oksanalenta-data";
+const TOKEN_KEY = "oksanalenta_admin_token";
+const MAX_MEDIA = 45 * 1024 * 1024;
+
+const $ = (s) => document.querySelector(s);
+let token = "";
+try { token = localStorage.getItem(TOKEN_KEY) || ""; } catch (e) {}
+const state = { answers: [], answersSha: null, kHead: "", sections: [], kSha: null, kDirty: false, unanswered: [], stats: null };
+const mediaUrls = {};
+
+// ---------- GitHub API ----------
+function b64encodeBytes(bytes) {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+const b64encodeText = (s) => b64encodeBytes(new TextEncoder().encode(s));
+const b64decodeText = (b) => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g, "")), (c) => c.charCodeAt(0)));
+
+async function gh(path, opts = {}, raw = false) {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+    ...opts,
+    headers: { Authorization: `Bearer ${token}`, "X-GitHub-Api-Version": "2022-11-28",
+               Accept: raw ? "application/vnd.github.raw+json" : "application/vnd.github+json", ...(opts.headers || {}) },
+    cache: "no-store",
+  });
+  if (res.status === 401 || res.status === 403) throw new Error("auth");
+  return res;
+}
+
+async function getText(path) {
+  const res = await gh(path);
+  if (res.status === 404) return { text: null, sha: null };
+  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  const meta = await res.json();
+  if (meta.content) return { text: b64decodeText(meta.content), sha: meta.sha };
+  const raw = await gh(path, {}, true);
+  return { text: await raw.text(), sha: meta.sha };
+}
+
+async function putFile(path, b64, sha, message) {
+  const body = { message, content: b64 };
+  if (sha) body.sha = sha;
+  const res = await gh(path, { method: "PUT", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } });
+  if (res.status === 409 || res.status === 422) throw new Error("conflict");
+  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  return (await res.json()).content.sha;
+}
+
+// ---------- Дрібниці інтерфейсу ----------
+function toast(text, err = false) {
+  document.querySelectorAll(".toast").forEach((t) => t.remove());
+  const t = document.createElement("div");
+  t.className = "toast" + (err ? " err" : "");
+  t.textContent = text;
+  // якщо відкрите вікно редагування, повідомлення має бути поверх нього
+  (document.querySelector("dialog[open]") || document.body).append(t);
+  setTimeout(() => t.remove(), err ? 6000 : 3000);
+}
+
+function el(tag, props = {}, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  }
+  for (const c of children.flat()) if (c != null) e.append(c);
+  return e;
+}
+
+function handleError(e) {
+  console.error(e);
+  if (e.message === "auth") { toast("Токен не підходить або протермінований. Увійдіть знову.", true); logout(); }
+  else if (e.message === "conflict") { toast("Дані щойно змінились (можливо, через Telegram). Оновлюю, повторіть зміну.", true); loadAll(); }
+  else toast("Не вдалося: " + e.message + ". Перевірте інтернет і спробуйте ще раз.", true);
+}
+
+// ---------- Вхід ----------
+function showApp(on) {
+  $("#login").classList.toggle("hidden", on);
+  $("#tabs").classList.toggle("hidden", !on);
+  $("#logout").classList.toggle("hidden", !on);
+  if (on) switchTab("answers"); else document.querySelectorAll("main > section[id^=tab-]").forEach((s) => s.classList.add("hidden"));
+}
+
+function logout() {
+  try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+  token = "";
+  showApp(false);
+}
+
+$("#login-btn").onclick = async () => {
+  token = $("#token").value.trim();
+  if (!token) return;
+  try {
+    await loadAll();
+    try { localStorage.setItem(TOKEN_KEY, token); } catch (e) {}
+    $("#token").value = "";
+    document.querySelectorAll(".toast").forEach((t) => t.remove());
+    showApp(true);
+  } catch (e) {
+    toast(e.message === "auth" ? "Токен не підходить. Перевірте, чи скопійовано повністю." : "Не вдалося увійти: " + e.message, true);
+  }
+};
+$("#token").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#login-btn").click(); });
+$("#logout").onclick = logout;
+
+// ---------- Вкладки ----------
+function switchTab(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll("main > section[id^=tab-]").forEach((s) => s.classList.toggle("hidden", s.id !== "tab-" + name));
+}
+document.querySelectorAll("nav button").forEach((b) => (b.onclick = () => { switchTab(b.dataset.tab); if (b.dataset.tab !== "knowledge") loadAll().catch(handleError); }));
+
+// ---------- Завантаження даних ----------
+async function loadAll() {
+  const [a, k, u, s] = await Promise.all([getText("answers.json"), getText("knowledge.md"), getText("unanswered.json"), getText("stats.json")]);
+  if (a.text === null) throw new Error("у репозиторії ще немає даних бота. Запустіть бота з налаштованим GitHub");
+  state.answers = JSON.parse(a.text); state.answersSha = a.sha;
+  if (!state.kDirty) { parseKnowledge(k.text || ""); state.kSha = k.sha; renderKnowledge(); }  // не затираємо незбережене
+  state.unanswered = u.text ? JSON.parse(u.text) : [];
+  state.stats = s.text ? JSON.parse(s.text) : null;
+  renderAnswers(); renderUnanswered(); renderStats();
+}
+
+async function saveAnswers(message) {
+  state.answersSha = await putFile("answers.json", b64encodeText(JSON.stringify(state.answers, null, 1)), state.answersSha, message);
+}
+
+// ---------- Готові відповіді ----------
+const mediaLabel = { video: "🎬 відео", photo: "🖼 фото", animation: "🎞 GIF", document: "📎 файл", video_note: "⭕ кружечок" };
+
+function renderAnswers() {
+  const q = $("#search").value.trim().toLowerCase();
+  const list = $("#answers-list");
+  list.replaceChildren();
+  const items = state.answers.filter((a) => !q || (a.title + " " + a.text + " " + (a.keywords || []).join(" ")).toLowerCase().includes(q));
+  if (!items.length) list.append(el("div", { class: "empty" }, "Нічого не знайдено"));
+  for (const a of items) {
+    list.append(el("div", { class: "item", onclick: () => openEditor(a.id) },
+      el("div", { class: "t" }, el("b", {}, a.title), el("span", {}, (a.text || "").replace(/\s+/g, " ") || "(лише медіа)")),
+      el("div", { class: "badges" },
+        a.media ? el("span", { class: "badge" }, mediaLabel[a.media.type] || "медіа") : null,
+        a.button ? el("span", { class: "badge" }, "🔘 " + a.button) : null,
+        a.handoff ? el("span", { class: "badge" }, "👩‍💼 мені") : null)));
+  }
+}
+$("#search").oninput = renderAnswers;
+
+let editing = null;     // копія відповіді, яку редагуємо
+let pendingFile = null; // новий файл, ще не завантажений
+
+async function mediaPreview(media) {
+  const box = $("#ed-media-preview");
+  box.replaceChildren();
+  if (!media) { box.textContent = "Немає"; return; }
+  if (!media.path) { box.textContent = (mediaLabel[media.type] || "медіа") + " додано через Telegram"; return; }
+  box.textContent = "Завантажую попередній перегляд…";
+  try {
+    if (!mediaUrls[media.path]) {
+      const res = await gh(media.path, {}, true);
+      if (!res.ok) throw new Error(res.status);
+      mediaUrls[media.path] = URL.createObjectURL(await res.blob());
+    }
+    showPreview(media.type, mediaUrls[media.path]);
+  } catch (e) { box.textContent = (mediaLabel[media.type] || "медіа") + " (не вдалося показати)"; }
+}
+
+function showPreview(type, url) {
+  const box = $("#ed-media-preview");
+  box.replaceChildren(type === "photo" || type === "animation" ? el("img", { src: url, alt: "" }) : el("video", { src: url, controls: "" }));
+}
+
+function openEditor(id, preset = {}) {
+  const a = id ? state.answers.find((x) => x.id === id) : null;
+  editing = a ? structuredClone(a) : { id: null, title: preset.title || "", text: "", media: null, keywords: [], patterns: [], button: null, handoff: false };
+  pendingFile = null;
+  $("#ed-heading").textContent = a ? "Редагування відповіді" : "Нова відповідь";
+  $("#ed-title").value = editing.title;
+  $("#ed-text").value = editing.text || "";
+  $("#ed-keywords").value = (editing.keywords || []).join(", ");
+  $("#ed-button").value = editing.button || "";
+  $("#ed-handoff").checked = !!editing.handoff;
+  $("#ed-patterns").textContent = editing.patterns && editing.patterns.length
+    ? `Також діють ${editing.patterns.length} вбудованих шаблонів, налаштованих під цю відповідь.` : "";
+  for (const b of ["#ed-delete", "#ed-up", "#ed-down"]) $(b).classList.toggle("hidden", !a);
+  $("#ed-file").value = "";
+  mediaPreview(editing.media);
+  $("#editor").showModal();
+}
+
+$("#new-answer").onclick = () => openEditor(null);
+$("#ed-cancel").onclick = () => $("#editor").close();
+
+$("#ed-file").onchange = () => {
+  const f = $("#ed-file").files[0];
+  if (!f) return;
+  if (f.size > MAX_MEDIA) { toast("Файл завеликий: до 45 МБ. Стисніть відео або вкоротіть його.", true); $("#ed-file").value = ""; return; }
+  pendingFile = f;
+  const type = f.type === "image/gif" ? "animation" : f.type.startsWith("image/") ? "photo" : f.type.startsWith("video/") ? "video" : "document";
+  editing.media = { type, path: null };
+  showPreview(type, URL.createObjectURL(f));
+};
+
+$("#ed-media-remove").onclick = () => { editing.media = null; pendingFile = null; $("#ed-file").value = ""; mediaPreview(null); };
+
+$("#ed-save").onclick = async () => {
+  const title = $("#ed-title").value.trim();
+  const text = $("#ed-text").value.trim();
+  if (!title) return toast("Напишіть питання", true);
+  if (!text && !editing.media) return toast("Потрібен текст або відео/фото", true);
+  const btn = $("#ed-save");
+  btn.disabled = true; btn.textContent = pendingFile ? "Завантажую файл…" : "Зберігаю…";
+  try {
+    if (pendingFile) {
+      const ext = (pendingFile.name.match(/\.[a-z0-9]{2,5}$/i) || [""])[0].toLowerCase();
+      const safe = (pendingFile.name.toLowerCase().replace(/\.[^.]*$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "file").slice(0, 30) + ext;
+      const path = `media/${Date.now()}-${safe}`;
+      const bytes = new Uint8Array(await pendingFile.arrayBuffer());
+      await putFile(path, b64encodeBytes(bytes), null, `Медіа для відповіді «${title}»`);
+      editing.media = { type: editing.media.type, path };
+    }
+    Object.assign(editing, {
+      title, text,
+      keywords: $("#ed-keywords").value.split(/[,;]/).map((k) => k.trim().toLowerCase()).filter(Boolean),
+      button: $("#ed-button").value.trim() || null,
+      handoff: $("#ed-handoff").checked,
+    });
+    if (editing.id) {
+      state.answers[state.answers.findIndex((x) => x.id === editing.id)] = editing;
+    } else {
+      editing.id = String(Math.max(0, ...state.answers.map((x) => +x.id || 0)) + 1);
+      state.answers.unshift(editing);
+    }
+    await saveAnswers(`Сайт: «${title}»`);
+    $("#editor").close();
+    renderAnswers();
+    toast("✅ Збережено. Бот оновиться приблизно за 30 секунд.");
+  } catch (e) { handleError(e); }
+  finally { btn.disabled = false; btn.textContent = "💾 Зберегти"; }
+};
+
+$("#ed-delete").onclick = async () => {
+  if (!confirm(`Видалити відповідь «${editing.title}»?`)) return;
+  state.answers = state.answers.filter((x) => x.id !== editing.id);
+  try { await saveAnswers(`Сайт: видалено «${editing.title}»`); $("#editor").close(); renderAnswers(); toast("🗑 Видалено"); }
+  catch (e) { handleError(e); }
+};
+
+async function move(delta) {
+  const i = state.answers.findIndex((x) => x.id === editing.id);
+  const j = i + delta;
+  if (j < 0 || j >= state.answers.length) return;
+  [state.answers[i], state.answers[j]] = [state.answers[j], state.answers[i]];
+  try { await saveAnswers(`Сайт: порядок «${editing.title}»`); renderAnswers(); toast(delta < 0 ? "Перенесено вище" : "Перенесено нижче"); }
+  catch (e) { handleError(e); }
+}
+$("#ed-up").onclick = () => move(-1);
+$("#ed-down").onclick = () => move(1);
+
+// ---------- Умови магазину (knowledge.md: розділи «## Назва») ----------
+function parseKnowledge(text) {
+  const parts = text.split(/^## /m);
+  state.kHead = parts[0];
+  state.sections = parts.slice(1).map((p) => {
+    const nl = p.indexOf("\n");
+    return { title: (nl < 0 ? p : p.slice(0, nl)).trim(), body: nl < 0 ? "" : p.slice(nl + 1).trim() };
+  });
+}
+
+function renderKnowledge() {
+  const box = $("#sections");
+  box.replaceChildren();
+  state.sections.forEach((s, i) => {
+    const title = el("input", { type: "text", value: s.title });
+    title.oninput = () => { s.title = title.value; state.kDirty = true; };
+    const body = el("textarea");
+    body.value = s.body;
+    body.oninput = () => { s.body = body.value; state.kDirty = true; };
+    body.style.minHeight = Math.min(420, 60 + s.body.split("\n").length * 24) + "px";
+    box.append(el("div", { class: "card" },
+      el("div", { class: "row" }, el("div", { style: "flex:1" }, title),
+        el("button", { class: "btn danger", type: "button", onclick: () => {
+          if (confirm(`Видалити розділ «${s.title}»?`)) { state.sections.splice(i, 1); state.kDirty = true; renderKnowledge(); }
+        } }, "🗑")),
+      el("div", { style: "margin-top:8px" }, body)));
+  });
+}
+
+$("#add-section").onclick = () => { state.sections.push({ title: "Новий розділ", body: "" }); state.kDirty = true; renderKnowledge(); window.scrollTo(0, document.body.scrollHeight); };
+
+$("#save-knowledge").onclick = async () => {
+  const text = state.kHead.trimEnd() + "\n\n" + state.sections.filter((s) => s.title.trim())
+    .map((s) => `## ${s.title.trim()}\n${s.body.trim()}`).join("\n\n") + "\n";
+  try {
+    state.kSha = await putFile("knowledge.md", b64encodeText(text), state.kSha, "Сайт: умови магазину");
+    state.kDirty = false;
+    toast("✅ Умови збережено. Бот оновиться приблизно за 30 секунд.");
+  } catch (e) { handleError(e); }
+};
+
+// ---------- Питання без відповіді ----------
+function renderUnanswered() {
+  const box = $("#unanswered-list");
+  box.replaceChildren();
+  const items = [...state.unanswered].reverse();
+  if (!items.length) box.append(el("div", { class: "empty" }, "Поки що всі питання бот закрив сам 🎉"));
+  for (const u of items) {
+    box.append(el("div", { class: "card" },
+      el("div", { class: "hint", style: "margin:0 0 4px" }, `#${u.id} · ${u.date}`),
+      el("div", { style: "white-space:pre-wrap" }, u.text),
+      el("div", { class: "row", style: "margin-top:10px" },
+        el("button", { class: "btn", type: "button", onclick: () => { switchTab("answers"); openEditor(null, { title: u.text.slice(0, 120) }); } },
+          "📌 Зробити готову відповідь"))));
+  }
+}
+
+// ---------- Статистика ----------
+function sumDays(days) {
+  const total = {};
+  if (!state.stats) return total;
+  const now = new Date();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(now - i * 864e5);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    for (const [k, v] of Object.entries(state.stats.days[key] || {})) total[k] = (total[k] || 0) + v;
+  }
+  return total;
+}
+
+function renderStats() {
+  const box = $("#stats");
+  box.replaceChildren();
+  if (!state.stats) { box.append(el("div", { class: "card empty" }, "Статистика з'явиться, коли бот попрацює кілька хвилин.")); return; }
+  const stat = (n, l) => el("div", { class: "card stat" }, el("div", { class: "n" }, String(n)), el("div", { class: "l" }, l));
+  const period = (title, s) => {
+    const q = s.question || 0, self = q - (s.handoff || 0);
+    return el("div", { class: "card" }, el("h2", {}, title),
+      el("div", { class: "stats" },
+        stat(q, "питань"), stat(q ? Math.round(self * 100 / q) + "%" : "—", "бот закрив сам"),
+        stat(s.ready || 0, "готові відповіді"), stat(s.ai || 0, "відповів ШІ"),
+        stat(s.photo || 0, "фото від клієнток"), stat(s.handoff || 0, "передано вам")));
+  };
+  const titles = Object.fromEntries(state.answers.map((a) => [a.id, a.title]));
+  const top = Object.entries(state.stats.answers || {}).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  box.append(
+    period("Сьогодні", sumDays(1)), period("За 7 днів", sumDays(7)), period("За 30 днів", sumDays(30)),
+    el("div", { class: "stats" }, stat(state.stats.users_total, "клієнток у боті"),
+      stat(state.stats.users_new_week, "нових за тиждень"), stat(state.stats.subscribers, "отримують розсилку")),
+    el("div", { class: "card", style: "margin-top:12px" }, el("h2", {}, "🔝 Найпопулярніші готові відповіді"),
+      top.length ? el("ol", {}, top.map(([id, n]) => el("li", {}, `${titles[id] || "видалена відповідь"} — ${n}`)))
+                 : el("p", { class: "hint" }, "Поки немає")));
+}
+
+// ---------- Старт ----------
+if (token) loadAll().then(() => showApp(true)).catch((e) => { handleError(e); showApp(false); });
+else showApp(false);
+</script>
+</body>
+</html>
